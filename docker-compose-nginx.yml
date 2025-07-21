@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:1.24-alpine
+    container_name: nacos-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./logs/nginx:/var/log/nginx
+      - ./config/ssl:/etc/nginx/ssl:ro
+    networks:
+      - nacos-network
+    depends_on:
+      - nacos-node1
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/nacos/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
+networks:
+  nacos-network:
+    external: true
+    name: nacos-cluster_nacos-network
